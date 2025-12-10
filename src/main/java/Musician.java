@@ -24,11 +24,14 @@ public class Musician {
         return this.unavailableWeeks;
     }
 
-    boolean canPlay(Instruments instrument, int week) {
-        return playableInstruments.contains(instrument) && !unavailableWeeks.contains(week);
+    boolean canPlay(Instruments instrument) {
+        return playableInstruments.contains(instrument);
     }
 
-    boolean isAvailable(int week, int day){
+    boolean isAvailable(int week){
         return !unavailableWeeks.contains(week);
     }
+
+    boolean
+
 }
