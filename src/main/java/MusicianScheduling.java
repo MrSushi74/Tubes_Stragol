@@ -10,6 +10,7 @@ public class MusicianScheduling {
     private int totalWeeks;
     private Musician[][] schedule;
     private boolean needsAlt;
+    private boolean foundSchedule = false;
 
     public MusicianScheduling(List<Instruments> instruments, List<Musician> musicianList, int totalWeeks){
         this.instruments = instruments;
@@ -18,7 +19,12 @@ public class MusicianScheduling {
         this.schedule = new Musician[totalWeeks][instruments.size()];
     }
     public void generateSchedule(){
+        // set ulang penanda solusi ditemukan
+        foundSchedule = false;
         dfs(0, 0, new ArrayList<Musician>());
+        if (!foundSchedule) {
+            System.out.println("No valid schedule found for the given constraints.");
+        }
     }
 
     private void printSchedule(){
@@ -31,15 +37,36 @@ public class MusicianScheduling {
         }
     }
     private void dfs (int week, int index, List<Musician> weeklyAssigned){
-        //finish all week
+        // selesai untuk semua minggu
+        if (foundSchedule) return; // berheti jika udh nemu
+
         if (week == totalWeeks){
             printSchedule();
+            foundSchedule = true;
             return;
         }
 
-        if(index == instruments.size()){
-            for (int i = 0; i < instruments.size(); i++) {
+        // jika semua instrumen pada minggu ini sudah ditugaskan, lanjut ke minggu berikutnya
+        if (index == instruments.size()){
+            dfs(week + 1, 0, new ArrayList<Musician>());
+            return;
+        }
 
+        Instruments instrument = instruments.get(index);
+
+        for (Musician m : musicianList){
+            if (!weeklyAssigned.contains(m) && m.canPlay(instrument) && m.isAvailable(week)) {
+                // tetapkan
+                schedule[week][index] = m;
+                weeklyAssigned.add(m);
+                
+                // rekursif ke slot berikutnya
+                dfs(week, index + 1, weeklyAssigned);
+                if (foundSchedule) return;
+                
+                // mundur (backtrack)
+                weeklyAssigned.remove(weeklyAssigned.size() - 1);
+                schedule[week][index] = null;
             }
         }
     }
