@@ -32,6 +32,4 @@ public class Musician {
         return !unavailableWeeks.contains(week);
     }
 
-    boolean
-
 }
