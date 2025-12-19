@@ -16,36 +16,35 @@ public class Main {
         // 2. Definisi Musisi berdasarkan Test Case
         List<Musician> musicians = new ArrayList<>();
 
-        // A & B: Bisa Guitar dan Bass. Libur Minggu 1 & 2 (Indeks 0 & 1)
+            // A & B
         musicians.add(new Musician("A",
-                Arrays.asList(Instruments.GUITAR, Instruments.BASS), Arrays.asList(0, 1)));
+                                   List.of(Instruments.GUITAR), List.of(0)));
         musicians.add(new Musician("B",
-                Arrays.asList(Instruments.GUITAR, Instruments.BASS), Arrays.asList(0, 1)));
+                                   List.of(Instruments.BASS), List.of(0)));
 
-        // C & D: Keyboard (PIANO). C Libur Minggu 3 & 4 (Indeks 2 & 3)
+    // C & D
         musicians.add(new Musician("C",
-                Arrays.asList(Instruments.PIANO), Arrays.asList(2, 3)));
+                                   List.of(Instruments.PIANO), List.of(0)));
         musicians.add(new Musician("D",
-                Arrays.asList(Instruments.PIANO), new ArrayList<>()));
+                                   List.of(Instruments.DRUMS), List.of(0)));
 
-        // E & F: Drum. Selalu tersedia
+    // E & F
         musicians.add(new Musician("E",
-                Arrays.asList(Instruments.DRUMS), new ArrayList<>()));
+                                   List.of(Instruments.GUITAR), List.of(1)));
         musicians.add(new Musician("F",
-                Arrays.asList(Instruments.DRUMS), new ArrayList<>()));
+                                   List.of(Instruments.BASS), List.of(1)));
 
-        // G: Guitar. Selalu tersedia
+    // G
         musicians.add(new Musician("G",
-                Arrays.asList(Instruments.GUITAR), new ArrayList<>()));
+                                   List.of(Instruments.PIANO), List.of(1)));
 
-        // H & I: Bass. Selalu tersedia
+    // H
         musicians.add(new Musician("H",
-                Arrays.asList(Instruments.BASS), new ArrayList<>()));
-        musicians.add(new Musician("I",
-                Arrays.asList(Instruments.BASS), new ArrayList<>()));
+                                   List.of(Instruments.DRUMS), List.of(1)));
+
 
         // 3. Konfigurasi Total Minggu (Contoh: 4 Minggu)
-        int totalWeeks = 4;
+        int totalWeeks = 2;
 
         // 4. Jalankan Penjadwalan
         System.out.println("=== Menjalankan Penjadwalan Test Case 1 ===");

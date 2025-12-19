@@ -1,83 +1,3 @@
-//import java.util.ArrayList;
-//import java.util.HashMap;
-//import java.util.List;
-//import java.util.Map;
-//
-//public class MusicianScheduling {
-//    private List<Instruments> instruments;
-//    private List<Musician> musicianList;
-////    private Map<Musician, Integer> playCount = new HashMap<>();
-//    private int totalWeeks;
-//    private Musician[][] schedule;
-//    private boolean needsAlt;
-//    private boolean foundSchedule = false;
-//
-//    public MusicianScheduling(List<Instruments> instruments, List<Musician> musicianList, int totalWeeks){
-//        this.instruments = instruments;
-//        this.musicianList = musicianList;
-//        this.totalWeeks = totalWeeks;
-//        this.schedule = new Musician[totalWeeks][instruments.size()];
-//    }
-//    public void generateSchedule(){
-//        // set ulang penanda solusi ditemukan
-//        foundSchedule = false;
-//        dfs(0, 0, new ArrayList<Musician>());
-//        if (!foundSchedule) {
-//            System.out.println("No valid schedule found for the given constraints.");
-//        }
-//    }
-//
-//    private void printSchedule(){
-//        for (int i = 0; i < totalWeeks; i++) {
-//            System.out.print("Week : " + i + " : ");
-//            for (int j = 0; j < instruments.size(); j++) {
-//                System.out.print(schedule[i][j].getName() + " ");
-//            }
-//            System.out.println();
-//        }
-//    }
-//    private void dfs (int week, int index, List<Musician> weeklyAssigned){
-//        // selesai untuk semua minggu
-//        if (foundSchedule) return; // berheti jika udh nemu
-//
-//        if (week == totalWeeks){
-//            printSchedule();
-//            foundSchedule = true;
-//            return;
-//        }
-//
-//        // jika semua instrumen pada minggu ini sudah ditugaskan, lanjut ke minggu berikutnya
-//        if (index == instruments.size()){
-//            dfs(week + 1, 0, new ArrayList<Musician>());
-//            return;
-//        }
-//
-//        Instruments instrument = instruments.get(index);
-//
-//        for (Musician m : musicianList){
-//            if (!weeklyAssigned.contains(m) && m.canPlay(instrument) && m.isAvailable(week)) {
-//
-//
-//                // tetapkan
-//                schedule[week][index] = m;
-//                weeklyAssigned.add(m);
-//
-//                // rekursif ke slot berikutnya
-//                dfs(week, index + 1, weeklyAssigned);
-//                if (foundSchedule) return;
-//
-//                // mundur (backtrack)
-//                weeklyAssigned.remove(weeklyAssigned.size() - 1);
-//                schedule[week][index] = null;
-//            } else {
-//                Optional: System.out.println("Cannot assign " + m.getName() + " to " + instrument);
-//            }
-//        }
-//    }
-//
-//
-//}
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -88,11 +8,11 @@ import java.util.stream.Collectors;
 public class MusicianScheduling {
     private List<Instruments> instruments;
     private List<Musician> musicianList;
-    // Map untuk mencatat berapa kali musisi sudah bermain (Kriteria No. 6)
     private Map<Musician, Integer> playCount = new HashMap<>();
     private int totalWeeks;
     private Musician[][] schedule;
     private boolean foundSchedule = false;
+    int totalSolutions = 0;
 
     public MusicianScheduling(List<Instruments> instruments, List<Musician> musicianList, int totalWeeks) {
         this.instruments = instruments;
@@ -100,7 +20,6 @@ public class MusicianScheduling {
         this.totalWeeks = totalWeeks;
         this.schedule = new Musician[totalWeeks][instruments.size()];
 
-        // Inisialisasi hitungan bermain untuk setiap musisi
         for (Musician m : musicianList) {
             playCount.put(m, 0);
         }
@@ -108,24 +27,25 @@ public class MusicianScheduling {
 
     public void generateSchedule() {
         foundSchedule = false;
-        // Menggunakan list untuk melacak musisi yang ditugaskan per minggu
+        totalSolutions = 0;
         dfs(0, 0, new ArrayList<Musician>());
-        if (!foundSchedule) {
-            System.out.println("No valid schedule found for the given constraints.");
+        if (totalSolutions == 0){
+            System.out.println("No valid solutions found");
+        }
+        else if (!foundSchedule) {
+            System.out.println("No more solutions, total solutions : " + totalSolutions );
         }
     }
 
     private void printSchedule() {
         System.out.println("\n" + "=".repeat(20 + (totalWeeks * 15)));
 
-        // Header baris pertama: Menampilkan nomor minggu ke arah kanan
         System.out.printf("%-15s |", "INSTRUMEN");
         for (int w = 0; w < totalWeeks; w++) {
             System.out.printf(" Minggu %-6d |", (w + 1));
         }
         System.out.println("\n" + "-".repeat(20 + (totalWeeks * 15)));
 
-        // Baris berikutnya: Menampilkan Instrumen di kiri, lalu nama pemain ke kanan
         for (int i = 0; i < instruments.size(); i++) {
             String instrumentName = instruments.get(i).toString();
             System.out.printf("%-15s |", instrumentName);
@@ -143,14 +63,21 @@ public class MusicianScheduling {
     private void dfs(int week, int index, List<Musician> weeklyAssigned) {
         if (foundSchedule) return;
 
-        // Base case: Jika semua minggu selesai
+        // kalo semua minggu beres diisi
         if (week == totalWeeks) {
+            this.totalSolutions++;
             printSchedule();
-            foundSchedule = true;
+            // On Demand BackTracking for solution
+            System.out.print("Find another Solution? Current Total Solutions : " + totalSolutions + " (y/n): ");
+            String choice = Utils.getString().trim().toLowerCase();
+            if (choice.equals("n")) {
+                foundSchedule = true;
+            }
+
             return;
         }
 
-        // Jika semua instrumen minggu ini selesai, lanjut ke minggu berikutnya
+        // kalo semua instrumen minggu ini beres, lanjut ke next week
         if (index == instruments.size()) {
             dfs(week + 1, 0, new ArrayList<Musician>());
             return;
@@ -158,28 +85,26 @@ public class MusicianScheduling {
 
         Instruments currentInstrument = instruments.get(index);
 
-        // KRITERIA NO 6: Optimasi pemerataan.
-        // Kita mengurutkan musisi berdasarkan jumlah bermain tersedikit (Greedy/Brute Force hybrid)
-        // Musisi dengan playCount rendah akan diprioritaskan untuk dipilih.
+        // musisi dengan playCount dikit diprioritaskan
         List<Musician> prioritizedMusicians = musicianList.stream()
                 .sorted(Comparator.comparingInt(m -> playCount.get(m)))
-                .collect(Collectors.toList());
+                .toList();
 
         for (Musician m : prioritizedMusicians) {
-            // Cek: Belum main di minggu ini AND bisa alat musiknya AND tersedia jadwalnya
+            // Cek: kalo musisi belum main & bisa instrumennya & jadwal ga libur
             if (!weeklyAssigned.contains(m) && m.canPlay(currentInstrument) && m.isAvailable(week)) {
 
-                // Tetapkan musisi
+                // jadwalin musisinya
                 schedule[week][index] = m;
                 weeklyAssigned.add(m);
-                playCount.put(m, playCount.get(m) + 1); // Tambah hitungan main
+                playCount.put(m, playCount.get(m) + 1);
 
-                // Rekursif ke slot instrumen berikutnya
+                // Rekursif ke next slot instrumen
                 dfs(week, index + 1, weeklyAssigned);
 
-                if (foundSchedule) return;
+                if (foundSchedule) return; // kalo direkursif ternyata scheduleFound, dia akan return trs
 
-                // Backtrack: Kembalikan keadaan jika solusi tidak ditemukan di jalur ini
+                // Backtrack: remove jadwal musisi sebelumnya dan dikosongkan lagi untuk diisi nanti
                 playCount.put(m, playCount.get(m) - 1);
                 weeklyAssigned.remove(weeklyAssigned.size() - 1);
                 schedule[week][index] = null;

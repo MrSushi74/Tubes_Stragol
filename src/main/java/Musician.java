@@ -2,26 +2,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Musician {
-    private String name;
-    private List<Instruments> playableInstruments;
-    private List<Integer>  unavailableWeeks;
+    String name;
+    List<Instruments> playableInstruments;
+    List<Integer>  unavailableWeeks;
 
     public Musician(String name, List<Instruments> playableInstruments, List<Integer> unavailableWeeks){
         this.name = name;
         this.playableInstruments = playableInstruments;
         this.unavailableWeeks = unavailableWeeks;
-    }
-
-    public String getName(){
-        return this.name;
-    }
-
-    public List<Instruments> getPlayableInstrument(){
-        return this.playableInstruments;
-    }
-
-    public List<Integer> getUnavailableWeeks(){
-        return this.unavailableWeeks;
     }
 
     boolean canPlay(Instruments instrument) {
@@ -32,4 +20,7 @@ public class Musician {
         return !unavailableWeeks.contains(week);
     }
 
+    public String getName() {
+        return this.name;
+    }
 }
