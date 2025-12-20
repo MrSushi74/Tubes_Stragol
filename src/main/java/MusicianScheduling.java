@@ -1,143 +1,198 @@
+// MusicianScheduling.java updates
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class MusicianScheduling {
-    private static class Schedule{
+    private static class Schedule {
         int week;
         int instrumentIndex;
         int musicianListIndex;
+        int assignedToCurrentInstrument; // New: tracks how many for this specific instrument
         List<Musician> weeklyAssigned;
 
-        public Schedule (int week, int instrumentIndex, int musicianListIndex, List<Musician> weeklyAssigned){
+        public Schedule(int week, int instrumentIndex, int musicianListIndex, int assignedToCurrentInstrument, List<Musician> weeklyAssigned) {
             this.week = week;
             this.instrumentIndex = instrumentIndex;
             this.musicianListIndex = musicianListIndex;
+            this.assignedToCurrentInstrument = assignedToCurrentInstrument;
             this.weeklyAssigned = new ArrayList<>(weeklyAssigned);
         }
     }
+
     private List<Instruments> instruments;
     private List<Musician> musicianList;
     private Map<Musician, Integer> playCount = new HashMap<>();
     private int totalWeeks;
-    private Musician[][] schedule;
-    private boolean foundSchedule = false;
-
+    private int musiciansPerInstrument; // New: 1 or 2
+    private List<List<List<Musician>>> finalSchedule; // Updated to hold multiple musicians per slot
     private Stack<Schedule> scheduleStack = new Stack<>();
     int totalSolutions = 0;
+    boolean foundSolution = false;
 
-
-    public MusicianScheduling(List<Instruments> instruments, List<Musician> musicianList, int totalWeeks) {
+    public MusicianScheduling(List<Instruments> instruments, List<Musician> musicianList, int totalWeeks, int musiciansPerInstrument) {
         this.instruments = instruments;
         this.musicianList = musicianList;
         this.totalWeeks = totalWeeks;
-        this.schedule = new Musician[totalWeeks][instruments.size()];
+        this.musiciansPerInstrument = musiciansPerInstrument;
+
+        // Initialize schedule as a 3D structure: [week][instrument][list of musicians]
+        this.finalSchedule = new ArrayList<>();
+        for (int w = 0; w < totalWeeks; w++) {
+            List<List<Musician>> weekList = new ArrayList<>();
+            for (int i = 0; i < instruments.size(); i++) {
+                weekList.add(new ArrayList<>());
+            }
+            finalSchedule.add(weekList);
+        }
 
         for (Musician m : musicianList) {
             playCount.put(m, 0);
         }
-
-        scheduleStack.push(new Schedule(0,0,0,new ArrayList<>()));
+        // Initial state: week 0, instrument 0, musician index 0, 0 musicians assigned to instrument 0
+        scheduleStack.push(new Schedule(0, 0, 0, 0, new ArrayList<>()));
     }
 
-
     private void printSchedule() {
-        System.out.println("\n" + "=".repeat(20 + (totalWeeks * 15)));
+        // Adjust line length for better visibility if using 2 musicians
+        int lineLength = 20 + (totalWeeks * 18);
+        System.out.println("\n" + "=".repeat(lineLength));
 
+        // Print Header
         System.out.printf("%-15s |", "INSTRUMEN");
         for (int w = 0; w < totalWeeks; w++) {
-            System.out.printf(" Minggu %-6d |", (w + 1));
+            System.out.printf(" Minggu %-9d |", (w + 1));
         }
-        System.out.println("\n" + "-".repeat(20 + (totalWeeks * 15)));
+        System.out.println("\n" + "-".repeat(lineLength));
 
+        // Print Rows for each instrument
         for (int i = 0; i < instruments.size(); i++) {
             String instrumentName = instruments.get(i).toString();
             System.out.printf("%-15s |", instrumentName);
 
             for (int w = 0; w < totalWeeks; w++) {
-                String musicianName = (schedule[w][i] != null) ? schedule[w][i].getName() : "-";
-                System.out.printf(" %-13s |", musicianName);
+                // Get the list of musicians for this specific week and instrument
+                List<Musician> assigned = finalSchedule.get(w).get(i);
+
+                if (assigned.isEmpty()) {
+                    System.out.printf(" %-16s |", "-");
+                } else {
+                    // Join musician names with a comma if there are multiple
+                    String names = assigned.stream()
+                            .map(Musician::getName)
+                            .collect(Collectors.joining(", "));
+                    System.out.printf(" %-16s |", names);
+                }
             }
             System.out.println();
         }
 
-        System.out.println("=".repeat(20 + (totalWeeks * 15)) + "\n");
+        System.out.println("=".repeat(lineLength) + "\n");
     }
 
     public boolean dfsSchedule() {
+        // If the stack is empty, there are no more possibilities
         if (scheduleStack.isEmpty()) {
-            System.out.println("No more solutions available. Total solutions found: " + totalSolutions);
             return false;
         }
 
-        while(!scheduleStack.isEmpty()) {
-            Schedule currentSchedule = scheduleStack.peek();
+        // IMPORTANT: If we are here and totalSolutions > 0, it means the user
+        // just said 'y' to "Mau lagi?". We MUST backtrack one step first
+        // to remove the last musician of the previous solution.
+        if (foundSolution) {
+            backtrack();
+            foundSolution = false;
+        }
 
-            int week = currentSchedule.week;
-            int index = currentSchedule.instrumentIndex;
+        while (!scheduleStack.isEmpty()) {
+            Schedule current = scheduleStack.peek();
 
-            if (week == totalWeeks) {
+            // 1. Success condition: All weeks are scheduled
+            if (current.week == totalWeeks) {
                 totalSolutions++;
                 printSchedule();
-                scheduleStack.pop();
+                foundSolution = true; // Mark that we found one so the next call knows to backtrack
                 return true;
             }
 
-
-            // kalo semua instrumen minggu ini beres, lanjut ke next week
-            if (index == instruments.size()) {
+            // 2. If current instrument is fully staffed, move to the next instrument
+            if (current.assignedToCurrentInstrument >= musiciansPerInstrument) {
                 scheduleStack.pop();
-                scheduleStack.push(new Schedule(week + 1, 0, 0, new ArrayList<>()));
+                scheduleStack.push(new Schedule(current.week, current.instrumentIndex + 1, 0, 0, current.weeklyAssigned));
                 continue;
             }
 
-            Instruments currentInstrument = instruments.get(index);
+            // 3. If all instruments for the week are done, move to next week
+            if (current.instrumentIndex == instruments.size()) {
+                scheduleStack.pop();
+                scheduleStack.push(new Schedule(current.week + 1, 0, 0, 0, new ArrayList<>()));
+                continue;
+            }
 
-            // musisi dengan playCount dikit diprioritaskan
-            List<Musician> prioritizedMusicians = musicianList.stream()
+            Instruments inst = instruments.get(current.instrumentIndex);
+            List<Musician> prioritized = musicianList.stream()
                     .sorted(Comparator.comparingInt(m -> playCount.get(m)))
                     .toList();
 
             boolean foundChoice = false;
-            for (int i = currentSchedule.musicianListIndex; i < prioritizedMusicians.size(); i++) {
-                Musician m = prioritizedMusicians.get(i);
+            for (int i = current.musicianListIndex; i < prioritized.size(); i++) {
+                Musician m = prioritized.get(i);
 
-                if (!currentSchedule.weeklyAssigned.contains(m) && m.canPlay(currentInstrument) && m.isAvailable(currentSchedule.week)) {
-                    // Update index musisi buat backtracking nanti kalau balik ke state ini
-                    currentSchedule.musicianListIndex = i + 1;
+                // Logic to skip swapped spots:
+                // If we are picking the 2nd musician for the SAME instrument,
+                // ensure their index in the original musicianList is HIGHER than the 1st musician.
+                if (current.assignedToCurrentInstrument > 0) {
+                    Musician firstMusician = finalSchedule.get(current.week).get(current.instrumentIndex).get(0);
+                    int firstIndex = musicianList.indexOf(firstMusician);
+                    int currentIndex = musicianList.indexOf(m);
+                    if (currentIndex <= firstIndex) continue;
+                }
 
-                    // Simpan ke jadwal
-                    schedule[currentSchedule.week][currentSchedule.instrumentIndex] = m;
-                    currentSchedule.weeklyAssigned.add(m);
+                // Validation: Available, Can Play, Not already in another slot this week, Not already in THIS slot
+                if (m.isAvailable(current.week) &&
+                        m.canPlay(inst) &&
+                        !current.weeklyAssigned.contains(m) &&
+                        !finalSchedule.get(current.week).get(current.instrumentIndex).contains(m)) {
+
+                    // Update the index for this state so we don't pick this musician again for this slot
+                    current.musicianListIndex = i + 1;
+
+                    // Assign
+                    finalSchedule.get(current.week).get(current.instrumentIndex).add(m);
+                    current.weeklyAssigned.add(m);
                     playCount.put(m, playCount.get(m) + 1);
 
-                    // Push state baru buat instrumen berikutnya
-                    scheduleStack.push(new Schedule(currentSchedule.week, currentSchedule.instrumentIndex + 1, 0, currentSchedule.weeklyAssigned));
+                    // Push new state to find the next musician (or next instrument)
+                    scheduleStack.push(new Schedule(current.week, current.instrumentIndex, 0, current.assignedToCurrentInstrument + 1, current.weeklyAssigned));
                     foundChoice = true;
                     break;
                 }
             }
 
-            // 4. Kalau gak ada musisi yang cocok (DEAD END), lakukan Backtrack
+            // 4. Backtrack if no musician could be found for the current requirement
             if (!foundChoice) {
-                scheduleStack.pop(); // Buang state buntu
-                if (!scheduleStack.isEmpty()) {
-                    Schedule prev = scheduleStack.peek();
-                    // GUE TAMBAHIN INI: Lepas musisi dari slot sebelumnya
-                    if (prev.instrumentIndex < instruments.size()) {
-                        Musician lastM = schedule[prev.week][prev.instrumentIndex];
-                        if (lastM != null) {
-                            playCount.put(lastM, playCount.get(lastM) - 1); // Kurangin playCount lagi
-                            prev.weeklyAssigned.remove(lastM);             // Hapus dari daftar minggu ini
-                            schedule[prev.week][prev.instrumentIndex] = null; // Kosongin slot jadwal
-                        }
-                    }
+                // "Not a must" logic: If we wanted 2 but only found 1, we can skip to the next instrument
+                if (current.assignedToCurrentInstrument > 0) {
+                    scheduleStack.pop();
+                    scheduleStack.push(new Schedule(current.week, current.instrumentIndex + 1, 0, 0, current.weeklyAssigned));
+                } else {
+                    backtrack();
                 }
             }
-
         }
-        System.out.println("No More Solutions! Total: " + totalSolutions);
         return false;
     }
+
+    private void backtrack() {
+        scheduleStack.pop();
+        if (!scheduleStack.isEmpty()) {
+            Schedule prev = scheduleStack.peek();
+            List<Musician> assigned = finalSchedule.get(prev.week).get(prev.instrumentIndex);
+            if (!assigned.isEmpty()) {
+                Musician lastM = assigned.remove(assigned.size() - 1);
+                playCount.put(lastM, playCount.get(lastM) - 1);
+                prev.weeklyAssigned.remove(lastM);
+            }
+        }
+    }
 }
-
-

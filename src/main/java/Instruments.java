@@ -3,9 +3,4 @@ public enum Instruments {
     PIANO,
     DRUMS,
     BASS,
-    VIOLIN,
-    VIOLA,
-    CELLO,
-    TRUMPET,
-    TROMBONE
 }
