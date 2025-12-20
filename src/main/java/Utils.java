@@ -7,11 +7,15 @@ public class Utils {
         sc = new Scanner(System.in);
     }
 
-    public static int getInt(){
-        return sc.nextInt();
+    public static int getInt(String message){
+        System.out.println(message);
+        int value = sc.nextInt();
+        sc.nextLine();
+        return value;
     }
 
-    public static String getString(){
+    public static String getString(String message){
+        System.out.println(message);
         return sc.nextLine();
     }
 }

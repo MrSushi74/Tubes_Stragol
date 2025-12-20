@@ -65,8 +65,8 @@ public class TestCase {
         musicians.add(new Musician("B",List.of(Instruments.GUITAR,Instruments.BASS),List.of(1)));
 
         //C & D
-        musicians.add(new Musician("A",List.of(Instruments.PIANO),List.of(0)));
-        musicians.add(new Musician("B",List.of(Instruments.PIANO),List.of()));
+        musicians.add(new Musician("C",List.of(Instruments.PIANO),List.of(0)));
+        musicians.add(new Musician("D",List.of(Instruments.PIANO),List.of()));
 
         //E & F
         musicians.add(new Musician("E",List.of(Instruments.DRUMS), List.of(1)));

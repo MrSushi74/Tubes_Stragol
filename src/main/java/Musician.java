@@ -8,8 +8,8 @@ public class Musician {
 
     public Musician(String name, List<Instruments> playableInstruments, List<Integer> unavailableWeeks){
         this.name = name;
-        this.playableInstruments = playableInstruments;
-        this.unavailableWeeks = unavailableWeeks;
+        this.playableInstruments = new ArrayList<>(playableInstruments);
+        this.unavailableWeeks = new ArrayList<>(unavailableWeeks);
     }
 
     boolean canPlay(Instruments instrument) {
@@ -22,5 +22,9 @@ public class Musician {
 
     public String getName() {
         return this.name;
+    }
+
+    public List<Instruments> getPlayableInstruments(){
+        return this.playableInstruments;
     }
 }
