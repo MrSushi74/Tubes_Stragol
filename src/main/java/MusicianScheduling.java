@@ -1,6 +1,11 @@
 // MusicianScheduling.java updates
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 public class MusicianScheduling {
@@ -25,7 +30,7 @@ public class MusicianScheduling {
     private final Map<Musician, Integer> playCount = new HashMap<>();
     private final int totalWeeks;
     private final int musiciansPerInstrument;
-    private final List<List<List<Musician>>> finalSchedule; // Updated to hold multiple musicians per slot
+    private final List<List<List<Musician>>> finalSchedule; 
     private final Stack<Schedule> scheduleStack = new Stack<>();
     int totalSolutions = 0;
     boolean foundSolution = false;
@@ -36,7 +41,7 @@ public class MusicianScheduling {
         this.totalWeeks = totalWeeks;
         this.musiciansPerInstrument = musiciansPerInstrument;
 
-        // Initialize schedule as a 3D structure: [week][instrument][list of musicians]
+        //[week][instrument][musicianList]
         this.finalSchedule = new ArrayList<>();
         for (int i = 0; i < totalWeeks; i++) {
             List<List<Musician>> weekList = new ArrayList<>();
@@ -49,20 +54,18 @@ public class MusicianScheduling {
         for (Musician m : musicianList) {
             playCount.put(m, 0);
         }
-        // Initial state: week 0, instrument 0, musician index 0, 0 musicians assigned to instrument 0
+        //stack init
         scheduleStack.push(new Schedule(0, 0, 0, 0, new ArrayList<>()));
     }
 
 
     public boolean dfsSchedule() {
-        // If the stack is empty, there are no more possibilities
+        //no more schedule solutions
         if (scheduleStack.isEmpty()) {
             return false;
         }
 
-        // IMPORTANT: If we are here and totalSolutions > 0, it means the user
-        // just said 'y' to "Mau lagi?". We MUST backtrack one step first
-        // to remove the last musician of the previous solution.
+        // if found a solution in last call, backtrack 
         if (foundSolution) {
             backtrack();
             foundSolution = false;
@@ -71,31 +74,29 @@ public class MusicianScheduling {
         while (!scheduleStack.isEmpty()) {
             Schedule current = scheduleStack.peek();
 
-            // 1. Success condition: All weeks are scheduled
+            //All weeks are scheduled
             if (current.week == totalWeeks) {
                 totalSolutions++;
                 printSchedule();
-                foundSolution = true; // Mark that we found one so the next call knows to backtrack
+                foundSolution = true;
                 return true;
             }
 
-            // 2. If current instrument is fully staffed, move to the next instrument
+            // instrument full
             if (current.assignedToCurrentInstrument >= musiciansPerInstrument) {
                 scheduleStack.pop();
                 scheduleStack.push(new Schedule(current.week, current.instrumentIndex + 1, 0, 0, current.weeklyAssigned));
                 continue;
             }
 
-            // 3. If all instruments for the week are done, move to next week
+            // all instruments scheduled
             if (current.instrumentIndex == instruments.size()) {
                 scheduleStack.pop();
                 scheduleStack.push(new Schedule(current.week + 1, 0, 0, 0, new ArrayList<>()));
                 continue;
             }
-
+            
             Instruments inst = instruments.get(current.instrumentIndex);
-
-
             List<Musician> prioritized = new ArrayList<>(musicianList);
 
             prioritized.sort(new Comparator<Musician>() {
@@ -109,9 +110,7 @@ public class MusicianScheduling {
             for (int i = current.musicianListIndex; i < prioritized.size(); i++) {
                 Musician m = prioritized.get(i);
 
-                // Logic to skip swapped spots:
-                // If we are picking the 2nd musician for the SAME instrument,
-                // ensure their index in the original musicianList is HIGHER than the 1st musician.
+                //skip if musicians only swap
                 if (current.assignedToCurrentInstrument > 0) {
                     List<Musician> assignedToThisInstrument = finalSchedule.get(current.week).get(current.instrumentIndex);
                     Musician lastMusician = assignedToThisInstrument.getLast();
@@ -120,13 +119,13 @@ public class MusicianScheduling {
                     if (currentIndex <= firstIndex) continue;
                 }
 
-                // Validation: Available, Can Play, Not already in another slot this week, Not already in THIS slot
+                //assign musician if musician can play, available, unassigned this week, and unassigned this spot
                 if (m.isAvailable(current.week) &&
                         m.canPlay(inst) &&
                         !current.weeklyAssigned.contains(m) &&
                         !finalSchedule.get(current.week).get(current.instrumentIndex).contains(m)) {
 
-                    // Update the index for this state so we don't pick this musician again for this slot
+                    // next musician starts after this
                     current.musicianListIndex = i + 1;
 
                     // Assign
@@ -134,16 +133,16 @@ public class MusicianScheduling {
                     current.weeklyAssigned.add(m);
                     playCount.put(m, playCount.get(m) + 1);
 
-                    // Push new state to find the next musician (or next instrument)
+                    // push next state
                     scheduleStack.push(new Schedule(current.week, current.instrumentIndex, 0, current.assignedToCurrentInstrument + 1, current.weeklyAssigned));
                     foundChoice = true;
                     break;
                 }
             }
 
-            // 4. Backtrack if no musician could be found for the current requirement
+            //backtrack if no musicians fit the criteria
             if (!foundChoice) {
-                //but only found 1, we can skip to the next instrument
+                //if musicians are assigned, just try next instrument
                 if (current.assignedToCurrentInstrument > 0) {
                     scheduleStack.pop();
                     scheduleStack.push(new Schedule(current.week, current.instrumentIndex + 1, 0, 0, current.weeklyAssigned));
