@@ -2,7 +2,6 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-// 1. Define required instruments
         List<Instruments> requiredInstruments = Arrays.asList(
                 Instruments.GUITAR,
                 Instruments.BASS,
@@ -22,43 +21,43 @@ public class Main {
             int choice = Utils.getInt();
             Utils.getString(); // Flush buffer
 
-            if (choice == 0) break;
-
-            List<Musician> musicians;
+            List<Musician> musicians = new ArrayList<>();
             switch (choice) {
-                case 1 -> musicians = TestCase.getTestCaseOne();
-                case 2 -> musicians = TestCase.getTestCaseTwo();
-                case 3 -> musicians = TestCase.getTestCaseThree();
-                default -> {
-                    System.out.println("Pilihan tidak valid.");
-                    continue;
-                }
+                case 1 :
+                    musicians = TestCase.getTestCaseOne();
+                case 2 :
+                    musicians = TestCase.getTestCaseTwo();
+                case 3 :
+                    musicians = TestCase.getTestCaseThree();
+                case 4 :
+                    break;
             }
-
-            // 3. Configure Parameters
+            //total weeks
             System.out.print("Masukkan jumlah minggu: ");
             int totalWeeks = Utils.getInt();
 
-            System.out.print("Masukkan jumlah musisi per instrumen (1 atau 2): ");
+            //max musisi per instrumen
+            System.out.print("Masukkan jumlah musisi yang dibolehkan per instrumen: ");
             int perInstrument = Utils.getInt();
-            Utils.getString(); // Flush buffer
+            Utils.getString();
 
-            // 4. Run Scheduler
             System.out.println("\n--- Menjalankan Penjadwalan ---");
             MusicianScheduling scheduler = new MusicianScheduling(requiredInstruments, musicians, totalWeeks, perInstrument);
 
             boolean finding = true;
+            int totalSolutions = 0;
             while (finding) {
                 if (scheduler.dfsSchedule()) {
-                    System.out.print("Cari solusi lain? (y/n): ");
+                    System.out.print("Total Solutions : "+ ++totalSolutions +"\n Find Other Solutions? (y/n): ");
                     if (Utils.getString().equalsIgnoreCase("n")) {
+                        System.out.println("total solutions found = "+ totalSolutions);
                         finding = false;
                     }
                 } else {
+                    System.out.println("No More Solutions, total solutions found = "+ totalSolutions);
                     finding = false;
                 }
             }
         }
-        System.out.println("Program Selesai.");
     }
 }

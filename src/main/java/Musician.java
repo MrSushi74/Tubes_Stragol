@@ -12,7 +12,7 @@ public class Musician {
         this.unavailableWeeks = unavailableWeeks;
     }
 
-    boolean canPlay(Instruments instrument) {
+    boolean canPlay (Instruments instrument) {
         return playableInstruments.contains(instrument);
     }
 
@@ -23,4 +23,6 @@ public class Musician {
     public String getName() {
         return this.name;
     }
+
+
 }
