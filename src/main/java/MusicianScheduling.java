@@ -20,13 +20,13 @@ public class MusicianScheduling {
         }
     }
 
-    private List<Instruments> instruments;
-    private List<Musician> musicianList;
-    private Map<Musician, Integer> playCount = new HashMap<>();
-    private int totalWeeks;
-    private int musiciansPerInstrument;
-    private List<List<List<Musician>>> finalSchedule; // Updated to hold multiple musicians per slot
-    private Stack<Schedule> scheduleStack = new Stack<>();
+    private final List<Instruments> instruments;
+    private final List<Musician> musicianList;
+    private final Map<Musician, Integer> playCount = new HashMap<>();
+    private final int totalWeeks;
+    private final int musiciansPerInstrument;
+    private final List<List<List<Musician>>> finalSchedule; // Updated to hold multiple musicians per slot
+    private final Stack<Schedule> scheduleStack = new Stack<>();
     int totalSolutions = 0;
     boolean foundSolution = false;
 
@@ -53,42 +53,6 @@ public class MusicianScheduling {
         scheduleStack.push(new Schedule(0, 0, 0, 0, new ArrayList<>()));
     }
 
-    private void printSchedule() {
-        // Adjust line length for better visibility if using 2 musicians
-        int lineLength = 20 + (totalWeeks * 18);
-        System.out.println("\n" + "=".repeat(lineLength));
-
-        // Print Header
-        System.out.printf("%-15s |", "INSTRUMEN");
-        for (int w = 0; w < totalWeeks; w++) {
-            System.out.printf(" Minggu %-9d |", (w + 1));
-        }
-        System.out.println("\n" + "-".repeat(lineLength));
-
-        // Print Rows for each instrument
-        for (int i = 0; i < instruments.size(); i++) {
-            String instrumentName = instruments.get(i).toString();
-            System.out.printf("%-15s |", instrumentName);
-
-            for (int w = 0; w < totalWeeks; w++) {
-                // Get the list of musicians for this specific week and instrument
-                List<Musician> assigned = finalSchedule.get(w).get(i);
-
-                if (assigned.isEmpty()) {
-                    System.out.printf(" %-16s |", "-");
-                } else {
-                    // Join musician names with a comma if there are multiple
-                    String names = assigned.stream()
-                            .map(Musician::getName)
-                            .collect(Collectors.joining(", "));
-                    System.out.printf(" %-16s |", names);
-                }
-            }
-            System.out.println();
-        }
-
-        System.out.println("=".repeat(lineLength) + "\n");
-    }
 
     public boolean dfsSchedule() {
         // If the stack is empty, there are no more possibilities
@@ -130,9 +94,16 @@ public class MusicianScheduling {
             }
 
             Instruments inst = instruments.get(current.instrumentIndex);
-            List<Musician> prioritized = musicianList.stream()
-                    .sorted(Comparator.comparingInt(m -> playCount.get(m)))
-                    .toList();
+
+
+            List<Musician> prioritized = new ArrayList<>(musicianList);
+
+            prioritized.sort(new Comparator<Musician>() {
+                @Override
+                public int compare(Musician m1, Musician m2) {
+                    return Integer.compare(playCount.get(m1), playCount.get(m2));
+                }
+            });
 
             boolean foundChoice = false;
             for (int i = current.musicianListIndex; i < prioritized.size(); i++) {
@@ -142,8 +113,9 @@ public class MusicianScheduling {
                 // If we are picking the 2nd musician for the SAME instrument,
                 // ensure their index in the original musicianList is HIGHER than the 1st musician.
                 if (current.assignedToCurrentInstrument > 0) {
-                    Musician firstMusician = finalSchedule.get(current.week).get(current.instrumentIndex).get(0);
-                    int firstIndex = musicianList.indexOf(firstMusician);
+                    List<Musician> assignedToThisInstrument = finalSchedule.get(current.week).get(current.instrumentIndex);
+                    Musician lastMusician = assignedToThisInstrument.getLast();
+                    int firstIndex = musicianList.indexOf(lastMusician);
                     int currentIndex = musicianList.indexOf(m);
                     if (currentIndex <= firstIndex) continue;
                 }
@@ -194,5 +166,42 @@ public class MusicianScheduling {
                 prev.weeklyAssigned.remove(lastM);
             }
         }
+    }
+
+    private void printSchedule() {
+        // Adjust line length for better visibility if using 2 musicians
+        int lineLength = 20 + (totalWeeks * 18);
+        System.out.println("\n" + "=".repeat(lineLength));
+
+        // Print Header
+        System.out.printf("%-15s |", "INSTRUMEN");
+        for (int w = 0; w < totalWeeks; w++) {
+            System.out.printf(" Minggu %-9d |", (w + 1));
+        }
+        System.out.println("\n" + "-".repeat(lineLength));
+
+        // Print Rows for each instrument
+        for (int i = 0; i < instruments.size(); i++) {
+            String instrumentName = instruments.get(i).toString();
+            System.out.printf("%-15s |", instrumentName);
+
+            for (int w = 0; w < totalWeeks; w++) {
+                // Get the list of musicians for this specific week and instrument
+                List<Musician> assigned = finalSchedule.get(w).get(i);
+
+                if (assigned.isEmpty()) {
+                    System.out.printf(" %-16s |", "-");
+                } else {
+                    // Join musician names with a comma if there are multiple
+                    String names = assigned.stream()
+                            .map(Musician::getName)
+                            .collect(Collectors.joining(", "));
+                    System.out.printf(" %-16s |", names);
+                }
+            }
+            System.out.println();
+        }
+
+        System.out.println("=".repeat(lineLength) + "\n");
     }
 }

@@ -10,7 +10,6 @@ public class Main {
         );
 
         while (true) {
-            // 2. Menu to choose Test Case
             System.out.println("\n=== PENJADWALAN MUSISI ===");
             System.out.println("1. Test Case 1 (A-I Mixed)");
             System.out.println("2. Test Case 2 (A-H Specific)");
