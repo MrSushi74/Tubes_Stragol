@@ -8,7 +8,7 @@ public class MusicianScheduling {
         int week;
         int instrumentIndex;
         int musicianListIndex;
-        int assignedToCurrentInstrument; // New: tracks how many for this specific instrument
+        int assignedToCurrentInstrument;
         List<Musician> weeklyAssigned;
 
         public Schedule(int week, int instrumentIndex, int musicianListIndex, int assignedToCurrentInstrument, List<Musician> weeklyAssigned) {
@@ -24,7 +24,7 @@ public class MusicianScheduling {
     private List<Musician> musicianList;
     private Map<Musician, Integer> playCount = new HashMap<>();
     private int totalWeeks;
-    private int musiciansPerInstrument; // New: 1 or 2
+    private int musiciansPerInstrument;
     private List<List<List<Musician>>> finalSchedule; // Updated to hold multiple musicians per slot
     private Stack<Schedule> scheduleStack = new Stack<>();
     int totalSolutions = 0;
@@ -38,9 +38,9 @@ public class MusicianScheduling {
 
         // Initialize schedule as a 3D structure: [week][instrument][list of musicians]
         this.finalSchedule = new ArrayList<>();
-        for (int w = 0; w < totalWeeks; w++) {
+        for (int i = 0; i < totalWeeks; i++) {
             List<List<Musician>> weekList = new ArrayList<>();
-            for (int i = 0; i < instruments.size(); i++) {
+            for (int j = 0; j < instruments.size(); j++) {
                 weekList.add(new ArrayList<>());
             }
             finalSchedule.add(weekList);
@@ -171,7 +171,7 @@ public class MusicianScheduling {
 
             // 4. Backtrack if no musician could be found for the current requirement
             if (!foundChoice) {
-                // "Not a must" logic: If we wanted 2 but only found 1, we can skip to the next instrument
+                //but only found 1, we can skip to the next instrument
                 if (current.assignedToCurrentInstrument > 0) {
                     scheduleStack.pop();
                     scheduleStack.push(new Schedule(current.week, current.instrumentIndex + 1, 0, 0, current.weeklyAssigned));

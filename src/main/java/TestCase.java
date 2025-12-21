@@ -10,7 +10,7 @@ public class TestCase {
         musicians.add(new Musician("B", List.of(Instruments.GUITAR, Instruments.BASS), List.of(0,1)));
 
         // Musisi C & D (Libur Minggu 0)
-        musicians.add(new Musician("C", List.of(Instruments.PIANO), List.of(2,3)));
+        musicians.add(new Musician("C", List.of(Instruments.PIANO), List.of(    2,3)));
         musicians.add(new Musician("D", List.of(Instruments.PIANO), List.of()));
 
         // Musisi E & F (Libur Minggu 1)

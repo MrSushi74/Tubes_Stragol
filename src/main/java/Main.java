@@ -25,13 +25,22 @@ public class Main {
             switch (choice) {
                 case 1 :
                     musicians = TestCase.getTestCaseOne();
+                    break;
                 case 2 :
                     musicians = TestCase.getTestCaseTwo();
+                    break;
                 case 3 :
                     musicians = TestCase.getTestCaseThree();
-                case 4 :
+                    break;
+                case 0 :
                     break;
             }
+
+            if (choice == 0){
+                break;
+            }
+
+
             //total weeks
             System.out.print("Masukkan jumlah minggu: ");
             int totalWeeks = Utils.getInt();
@@ -48,7 +57,7 @@ public class Main {
             int totalSolutions = 0;
             while (finding) {
                 if (scheduler.dfsSchedule()) {
-                    System.out.print("Total Solutions : "+ ++totalSolutions +"\n Find Other Solutions? (y/n): ");
+                    System.out.print("Total Solutions : "+ ++totalSolutions +"\nFind Other Solutions? (y/n): ");
                     if (Utils.getString().equalsIgnoreCase("n")) {
                         System.out.println("total solutions found = "+ totalSolutions);
                         finding = false;
